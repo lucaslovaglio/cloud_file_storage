@@ -31,7 +31,7 @@ export const UserRepository = {
         });
     },
 
-    async getUsers() {
+    async getUsers(): Promise<User[] | null> {
         return prisma.user.findMany();
     }
 }
