@@ -14,11 +14,12 @@ datasource db {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  email     String     @unique
-  password  String
-  createdAt DateTime   @default(now())
-  UserRole  UserRole[]
+  id             Int              @id @default(autoincrement())
+  email          String           @unique
+  password       String
+  createdAt      DateTime         @default(now())
+  UserRole       UserRole[]
+  FilePermission FilePermission[]
 }
 
 model Role {
@@ -52,4 +53,51 @@ model UserRole {
   role      Role     @relation(fields: [roleId], references: [id])
   roleId    Int
   createdAt DateTime @default(now())
+}
+
+model File {
+  id                   Int                    @id @default(autoincrement())
+  name                 String                 @unique
+  path                 String
+  createdAt            DateTime               @default(now())
+  FilePermission       FilePermission[]
+  FileStatusByProvider FileStatusByProvider[]
+}
+
+model FilePermissionType {
+  id             Int              @id @default(autoincrement())
+  name           String
+  createdAt      DateTime         @default(now())
+  FilePermission FilePermission[]
+}
+
+model FilePermission {
+  id        Int                @id @default(autoincrement())
+  file      File               @relation(fields: [fileId], references: [id])
+  fileId    Int
+  user      User               @relation(fields: [userId], references: [id])
+  userId    Int
+  type      FilePermissionType @relation(fields: [typeId], references: [id])
+  typeId    Int
+  createdAt DateTime           @default(now())
+}
+
+model Provider {
+  id                   Int                    @id @default(autoincrement())
+  name                 String                 @unique
+  status               Boolean                @default(true)
+  previousStatus       Boolean                @default(true)
+  FileStatusByProvider FileStatusByProvider[]
+}
+
+model FileStatusByProvider {
+  id         Int      @id @default(autoincrement())
+  file       File     @relation(fields: [fileId], references: [id])
+  fileId     Int
+  provider   Provider @relation(fields: [providerId], references: [id])
+  providerId Int
+  status     Boolean
+  createdAt  DateTime @default(now())
+
+  @@unique([fileId, providerId]) // clave única compuesta
 }

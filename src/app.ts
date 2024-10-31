@@ -3,6 +3,7 @@ import authRoutes from './auth/auth.routes';
 import permissionRoutes from "./permission/permission.routes";
 import roleRoutes from "./role/role.routes";
 import userRoutes from "./user/user.routes";
+import storageRoutes from "./cloud-storage/storage.routes";
 
 
 const app = express();
@@ -18,6 +19,7 @@ app.use('/auth', authRoutes);
 app.use('/permission', permissionRoutes);
 app.use('/role', roleRoutes);
 app.use('/user', userRoutes);
+app.use('/storage', storageRoutes);
 
 
 export default app
