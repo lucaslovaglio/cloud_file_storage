@@ -1,6 +1,9 @@
 import prisma from '../prisma/client';
-import {File} from './storage.interface'
+import {FileData} from './storage.interface'
 import {Provider} from "@prisma/client";
+import { File } from '@prisma/client';
+
+
 
 export const StorageRepository = {
     async updateFileStatus(providerId: number, fileId: number, status: boolean) {
@@ -39,10 +42,8 @@ export const StorageRepository = {
         });
     },
 
-    async createFile(file: File) {
-        const existingFile = await prisma.file.findUnique({
-            where: { name: file.name },
-        });
+    async createFile(file: FileData, userId: number) {
+        const existingFile = await this.getFileByName(file.name);
 
         if (existingFile) {
             throw new Error(`A file with the name '${file.name}' already exists.`);
@@ -52,13 +53,32 @@ export const StorageRepository = {
             data: {
                 name: file.name,
                 path: file.name,
+                createdById: userId
             }
+        });
+    },
+
+    async getFileByName(name: string) {
+        return prisma.file.findUnique({
+            where: {name: name},
         });
     },
 
     async fileExists(name: string) {
         return prisma.file.findUnique({
             where: { name }
+        });
+    },
+
+    async getFilesFromUserByDate(userId: number, startDate: Date, endDate: Date): Promise<File[]> {
+        return prisma.file.findMany({
+            where: {
+                createdById: userId,
+                createdAt: {
+                    gte: startDate,
+                    lte: endDate
+                }
+            }
         });
     }
 }

@@ -20,6 +20,7 @@ model User {
   createdAt      DateTime         @default(now())
   UserRole       UserRole[]
   FilePermission FilePermission[]
+  File           File[]
 }
 
 model Role {
@@ -60,6 +61,8 @@ model File {
   name                 String                 @unique
   path                 String
   createdAt            DateTime               @default(now())
+  createdById          Int
+  createdBy            User                   @relation(fields: [createdById], references: [id])
   FilePermission       FilePermission[]
   FileStatusByProvider FileStatusByProvider[]
 }

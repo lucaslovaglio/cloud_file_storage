@@ -15,7 +15,7 @@ export class RoleController {
     }
 
     async createRole(req: Request, res: Response) {
-        const { name } = req.body;
+        const { name } = req.body; //TODO: validate name with RoleType
         try {
             const role = await roleService.createRole(name);
             res.json({ message: 'Role created successfully', role });

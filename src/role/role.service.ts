@@ -1,11 +1,12 @@
 import {RoleRepository} from "./role.repository";
+import {RoleType} from "./role.interface";
 
 export class RoleService {
     async getRoleById(id: number) {
         return RoleRepository.findRoleById(id);
     }
 
-    async createRole(name: string) {
+    async createRole(name: RoleType) {
         return RoleRepository.createRole(name);
     }
 

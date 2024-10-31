@@ -1,6 +1,6 @@
 import AWS from 'aws-sdk';
 import {CloudProvider, ProviderType} from "../provider.interface";
-import {File, FilesListItem} from "../../storage.interface";
+import {FileData, FilesListItem} from "../../storage.interface";
 
 class S3Provider implements CloudProvider{
     private s3: AWS.S3;
@@ -14,7 +14,7 @@ class S3Provider implements CloudProvider{
         this.bucketName = process.env.S3_BUCKET_NAME as string;
     }
 
-    async uploadFile(file:File): Promise<void> {
+    async uploadFile(file:FileData): Promise<void> {
         const params: AWS.S3.PutObjectRequest = {
             Bucket: this.bucketName,
             Key: file.name,
@@ -53,6 +53,21 @@ class S3Provider implements CloudProvider{
             name: file.Key as string,
             size: file.Size || 0,
         })) || [];
+    }
+
+    async getFileSize(fileName: string): Promise<number | null> {
+        try {
+            const params = {
+                Bucket: this.bucketName,
+                Key: fileName
+            };
+
+            const data = await this.s3.headObject(params).promise();
+            return data.ContentLength || 0; // Tamaño en bytes
+        } catch (error) {
+            console.error(`Error al obtener el tamaño del archivo ${fileName}:`, error);
+            return null;
+        }
     }
 
     addBackupProvider(provider: CloudProvider): void {

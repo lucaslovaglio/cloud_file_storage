@@ -1,6 +1,6 @@
 import {CloudProvider} from "./provider/provider.interface";
 
-export interface File {
+export interface FileData {
     name: string;
     content: string;
 }
@@ -11,6 +11,6 @@ export interface FilesListItem {
 }
 
 export interface UploadOperation {
-    data: File;
+    data: FileData;
     result: void;
 }

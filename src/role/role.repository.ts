@@ -1,4 +1,5 @@
 import prisma from '../prisma/client';
+import {RoleType} from "./role.interface";
 
 export const RoleRepository = {
     async findRoleById(id: number) {
@@ -7,7 +8,7 @@ export const RoleRepository = {
         });
     },
 
-    async createRole(name: string) {
+    async createRole(name: RoleType) {
         return prisma.role.create({
             data: { name },
         });

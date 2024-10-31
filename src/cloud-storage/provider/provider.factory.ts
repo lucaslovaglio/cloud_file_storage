@@ -1,4 +1,3 @@
-// cloudProviderFactory.ts
 import {CloudProvider, ProviderType} from "./provider.interface";
 import { AzureProvider } from "./providers/azure.provider";
 import AwsProvider from "./providers/aws.provider";

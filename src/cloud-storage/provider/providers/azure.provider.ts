@@ -9,7 +9,7 @@ import {
     StorageSharedKeyCredential,
     generateBlobSASQueryParameters
 } from "@azure/storage-blob";
-import {File, FilesListItem} from "../../storage.interface";
+import {FileData, FilesListItem} from "../../storage.interface";
 
 export class AzureProvider implements CloudProvider {
     backupProvider: CloudProvider | null = null;
@@ -55,7 +55,7 @@ export class AzureProvider implements CloudProvider {
         return `${blockBlobClient.url}?${sasToken}`;
     }
 
-    async uploadFile(file: File): Promise<void> {
+    async uploadFile(file: FileData): Promise<void> {
         const blockBlobClient: BlockBlobClient = this.containerClient.getBlockBlobClient(file.name);
 
         console.log(
@@ -79,6 +79,12 @@ export class AzureProvider implements CloudProvider {
             );
         }
         return blobNames;
+    }
+
+    async getFileSize(fileName: string): Promise<number> {
+        const blockBlobClient = this.containerClient.getBlockBlobClient(fileName);
+        const properties = await blockBlobClient.getProperties();
+        return properties.contentLength;
     }
 
     addBackupProvider(backupProvider: CloudProvider): void {
@@ -108,11 +114,6 @@ export class AzureProvider implements CloudProvider {
         });
     }
 
-    private async getFileSize(fileName: string): Promise<number> {
-        const blockBlobClient = this.containerClient.getBlockBlobClient(fileName);
-        const properties = await blockBlobClient.getProperties();
-        return properties.contentLength;
-    }
 
     getProviderType(): ProviderType {
         return "azure"

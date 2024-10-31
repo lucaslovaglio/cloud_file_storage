@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import {StorageService} from "./storage.service";
-import { File } from "./storage.interface";
+import { FileData } from "./storage.interface";
 import {CloudProviderFactory} from "./provider/provider.factory";
 
 const awsProvider = CloudProviderFactory.createProvider("aws");
@@ -13,7 +13,7 @@ export class StorageController {
     async uploadFile(req: Request, res: Response): Promise<Response> {
         try {
             //TODO: archivos hardcodeados
-            const file: File = {
+            const file: FileData = {
                 name: 'blobName10.txt',
                 content: 'fileBuffer'
             }

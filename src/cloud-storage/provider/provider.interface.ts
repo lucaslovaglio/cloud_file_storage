@@ -1,12 +1,13 @@
-import {File, FilesListItem} from "../storage.interface";
+import {FileData, FilesListItem} from "../storage.interface";
 
 export interface CloudProvider {
     backupProvider?: CloudProvider;
     getProviderType(): ProviderType;
-    uploadFile(file: File): Promise<void>;
+    uploadFile(file: FileData): Promise<void>;
     deleteFile(fileName: string): Promise<void>;
     getFileUrl(fileName: string): Promise<string>;
-    listFiles(): Promise<FilesListItem[]>;
+    listFiles(startDate?: Date, endDate?: Date): Promise<FilesListItem[]>;
+    getFileSize(fileName: string): Promise<number>;
     addBackupProvider(provider: CloudProvider): void;
     checkAvailability(): Promise<boolean>;
 }

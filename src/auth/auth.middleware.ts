@@ -11,7 +11,7 @@ export const AuthMiddleware = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
-        req.userId = decoded.userId;
+        req.body.userId = decoded.userId;
         next();
     } catch (error) {
         return res.status(401).json({ message: 'Unauthorized' });

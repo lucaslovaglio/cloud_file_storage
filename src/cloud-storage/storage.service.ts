@@ -1,161 +1,48 @@
-import {BlobServiceClient, ContainerClient} from "@azure/storage-blob";
 import {CloudProvider, ProviderStatus} from "./provider/provider.interface";
-import {File, FilesListItem, UploadOperation} from "./storage.interface";
+import {FileData, FilesListItem} from "./storage.interface";
 import {StorageRepository} from "./storage.repository";
 import {ProviderService} from "./provider/provider.service";
-import {ProviderRepository} from "./provider/provider.repository";
 
 const providerService = new ProviderService();
 
 export class StorageService {
     constructor(private cloudProvider: CloudProvider) {}
 
-    async uploadFile( file: File, provider: CloudProvider = this.cloudProvider): Promise<void> {
-        const providerStatus: ProviderStatus = await providerService.getProviderStatus(provider);
-        if (providerStatus.status) {
-            // Si el proveedor está disponible, subo el file y sync backups
-            await provider.uploadFile(file);
-            const fileCreated = await StorageRepository.createFile(file);
-            const providerId = await providerService.getProviderId(provider.getProviderType())
-            await StorageRepository.logFileUpload(providerId, fileCreated.id);
-            await this.syncToBackups(file, "upload", provider);
-        } else {
-            await this.handleBackupUpload(provider, file);
-        }
+    async uploadFile(file: FileData, userId: number): Promise<void> {
+        const provider = this.cloudProvider;
+        await providerService.uploadFile(file, provider);
+
+        const fileCreated = await StorageRepository.createFile(file, userId);
+        const providerId = await providerService.getProviderId(provider.getProviderType())
+        await StorageRepository.logFileUpload(providerId, fileCreated.id);
     }
 
-    async getFileUrl(fileName: string, provider: CloudProvider = this.cloudProvider): Promise<string> {
-        const providerStatus: ProviderStatus = await providerService.getProviderStatus(this.cloudProvider);
-
-        if (!providerStatus.status) {
-            return await this.handleBackupGetUrl(provider, fileName);
-        }
-        // En este punto el provider está disponible
-        if (!providerStatus.previousStatus) {
-            await this.syncFromBackups(provider);
-        }
-        // Aca ya esta disponible y sincronizado, es decir que si en algun backup esta el archivo, ya esta en el principal
-        return await this.cloudProvider.getFileUrl(fileName);
-
+    async getFileUrl(fileName: string, userId: number): Promise<string> {
+        // chequear si el usuario tiene permisos para leer este archivo
+        return await providerService.getFileUrl(fileName, this.cloudProvider);
     }
 
-    async listFile(provider: CloudProvider = this.cloudProvider): Promise<FilesListItem[]> {
-        const providerStatus: ProviderStatus = await providerService.getProviderStatus(this.cloudProvider);
-
-        if (!providerStatus.status) {
-            return await this.handleBackupListFiles(provider);
-        }
-        // En este punto el provider está disponible
-        if (!providerStatus.previousStatus) {
-            await this.syncFromBackups(provider);
-        }
-        return await provider.listFiles();
+    async listFile(userId: number): Promise<FilesListItem[]> {
+        // aca tengo que filtrar solo los que le corresponden al usuario
+        return await providerService.listFiles(this.cloudProvider);
     }
 
-    async deleteFile(fileName: string, provider: CloudProvider = this.cloudProvider): Promise<void> {
-        const providerStatus: ProviderStatus = await providerService.getProviderStatus(this.cloudProvider);
+    async deleteFile(fileName: string): Promise<void> {
+        const provider = this.cloudProvider;
+        await providerService.deleteFile(fileName, provider);
 
-        if (!providerStatus.status) {
-            return await this.handleBackupDelete(provider, fileName);
-        }
-        // En este punto el provider está disponible
-        if (!providerStatus.previousStatus) {
-            await this.syncFromBackups(provider);
-        }
-        return await provider.deleteFile(fileName);
+        const file = await StorageRepository.getFileByName(fileName);
+        const providerId = await providerService.getProviderId(provider.getProviderType());
+        await StorageRepository.logFileDeletion(providerId, file.id);
     }
 
-    private async syncToBackups(file: File, operation: "upload" | "delete", provider: CloudProvider): Promise<void> {
-        let backupProvider = provider.backupProvider;
-        while (backupProvider) {
-            if (operation === "upload") {
-                await this.uploadFile(file, backupProvider).catch(err => console.error("Sync upload error:", err));
-            } else {
-                await this.deleteFile(file.name, backupProvider).catch(err => console.error("Sync delete error:", err));
-            }
-            backupProvider = backupProvider.backupProvider;
-        }
+
+    async getFilesFromUserByDate(userId: number, startDate: Date, endDate: Date) {
+        return StorageRepository.getFilesFromUserByDate(userId, startDate, endDate);
     }
 
-    private async syncFromBackups(provider: CloudProvider): Promise<void> {
-        let backupProvider = provider.backupProvider;
-        while (backupProvider) {
-            const backupStatus: ProviderStatus = await providerService.getProviderStatus(backupProvider);
-            // si el backup esta disponible, y no estuvo caido...
-            if (backupStatus.status && backupStatus.previousStatus) {
-                const files = await backupProvider.listFiles();
-                for (const file of files) {
-                    if (!await providerService.existFileInProvider(file.name, provider)) {
-                        // extraer a una funcion y testearlo
-                        const fileUrl = await backupProvider.getFileUrl(file.name);
-                        const fileContent = await this.downloadFileContent(fileUrl);
-                        const fileContentAsString = Buffer.from(fileContent).toString('utf-8');
-                        await provider.uploadFile({name: file.name, content: fileContentAsString});
-                    }
-                }
-                return
-            }
-            backupProvider = backupProvider.backupProvider;
-        }
-    }
-
-    private async handleBackupUpload(provider: CloudProvider, file: File): Promise<void> {
-        let backupProvider = provider.backupProvider;
-        while (backupProvider) {
-            try {
-                await this.uploadFile(file, backupProvider);
-                return;
-            } catch {
-                backupProvider = backupProvider.backupProvider;
-            }
-        }
-        throw new Error("No available providers for upload.");
-    }
-
-    private async handleBackupDelete(provider: CloudProvider, fileName: string): Promise<void> {
-        let backupProvider = provider.backupProvider;
-        while (backupProvider) {
-            try {
-                await this.deleteFile(fileName, backupProvider);
-                return;
-            } catch {
-                backupProvider = backupProvider.backupProvider;
-            }
-        }
-        throw new Error("No available providers for delete.");
-    }
-
-    private async handleBackupGetUrl(provider: CloudProvider, fileName: string): Promise<string> {
-        let backupProvider = provider.backupProvider;
-        while (backupProvider) {
-            try {
-                return await this.getFileUrl(fileName, backupProvider);
-            } catch {
-                backupProvider = backupProvider.backupProvider;
-            }
-        }
-        throw new Error("No available providers for get file url.");
-    }
-
-    private async handleBackupListFiles(provider: CloudProvider): Promise<FilesListItem[]> {
-        let backupProvider = provider.backupProvider;
-        while (backupProvider) {
-            try {
-                return await this.listFile(backupProvider);
-            } catch {
-                backupProvider = backupProvider.backupProvider;
-            }
-        }
-        throw new Error("No available providers for list files.");
-    }
-
-    private async downloadFileContent(url: string): Promise<Uint8Array> {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to download file: ${response.statusText}`);
-        }
-        const arrayBuffer = await response.arrayBuffer();
-        return new Uint8Array(arrayBuffer);
+    async getFileSize(fileName: string): Promise<number> {
+        return await providerService.getFileSize(fileName, this.cloudProvider);
     }
 
 }

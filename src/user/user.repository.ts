@@ -1,5 +1,6 @@
 import prisma from '../prisma/client';
 import { User } from '@prisma/client';
+import {RoleType} from "../role/role.interface";
 
 export const UserRepository = {
     async findUserByEmail(email: string): Promise<User | null> {
@@ -21,7 +22,7 @@ export const UserRepository = {
     },
 
     async getUserRoles(id: number) {
-        return prisma.userRole.findMany({
+        const userRoles = await prisma.userRole.findMany({
             where: { userId: id },
             include: {
                 role: {
@@ -29,6 +30,8 @@ export const UserRepository = {
                 }
             }
         });
+
+        return userRoles.map((userRole) => (userRole.role.name as RoleType));
     },
 
     async getUsers(): Promise<User[] | null> {

@@ -1,4 +1,5 @@
 import {UserRepository} from "./user.repository";
+import {RoleType} from "../role/role.interface";
 
 export class UserService {
     async getUserByEmail(email: string) {
@@ -13,7 +14,7 @@ export class UserService {
         return UserRepository.deleteUser(id);
     }
 
-    async getUserRoles(id: number) {
+    async getUserRoles(id: number): Promise<RoleType[]> {
         return UserRepository.getUserRoles(id);
     }
 
