@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import {UserService} from "../user/user.service";
 
 const userService = new UserService();
-const JWT_SECRET = 'your_jwt_secret';
+const JWT_SECRET = process.env.SECRET_KEY;
 
 export class AuthService {
     async register(email: string, password: string): Promise<string> {
