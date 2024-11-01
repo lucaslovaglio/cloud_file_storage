@@ -25,28 +25,18 @@ export class StatsService {
     private async createStatsList(daysRange: DaysRange, usersList: User[]): Promise<StatsListItem[]> {
         const statsList: StatsListItem[] = [];
         for (const user of usersList) {
-            const files = await storageService.getFilesFromUserByDate(user.id, daysRange.start, daysRange.end);
-            statsList.push(await this.createStatsListItem(user, files));
+            const storageUsed = await storageService.getStorageFromUserByDate(user.id, daysRange);
+            statsList.push(this.createStatsListItem(user, storageUsed));
         }
         return statsList;
     }
 
-    private async createStatsListItem(user: User, files: File[]): Promise<StatsListItem> {
-        const storageUsed = await this.getStorageUsedByUser(user, files);
+    private createStatsListItem(user: User, storageUsed: number): StatsListItem {
         return {
             userId: user.id,
             userName: user.email,
             storageUsed: storageUsed
         };
-    }
-
-    private async getStorageUsedByUser(user: User, files: File[]): Promise<number> {
-        let storageUsed = 0;
-        for (const file of files) {
-            const fileSize = await storageService.getFileSize(file.name);
-            storageUsed += fileSize;
-        }
-        return storageUsed;
     }
 
     async isUserAdmin(userId: number) {
