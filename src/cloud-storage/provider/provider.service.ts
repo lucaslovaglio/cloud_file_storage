@@ -18,6 +18,8 @@ export class ProviderService {
             .catch(() => {throw new Error(`Cannot delete provider with id ${providerId}`)});
     }
 
+
+
     /*** UPLOAD ***/
 
     async uploadFile(file: FileData, provider: CloudProvider): Promise<void> {
@@ -25,7 +27,7 @@ export class ProviderService {
         if (providerStatus.status) {
             // Si el proveedor está disponible, subo el file y sync backups
             await provider.uploadFile(file);
-            await this.syncToBackups(file.name, "upload", provider, file); //TODO
+            await this.syncUploadToBackups(file, provider);
         } else {
             await this.handleBackupUpload(provider, file);
         }
@@ -43,6 +45,17 @@ export class ProviderService {
         }
         throw new Error("No available providers for upload.");
     }
+
+    private async syncUploadToBackups(file: FileData, provider: CloudProvider): Promise<void> {
+        let backupProvider: CloudProvider | null = provider.backupProvider;
+
+        while (backupProvider) {
+            await this.uploadFile(file, backupProvider)
+                .catch(err => console.error("Sync upload error:", err));
+            backupProvider = backupProvider.backupProvider;
+        }
+    }
+
 
 
     /*** GET FILE URL ***/
@@ -74,6 +87,7 @@ export class ProviderService {
     }
 
 
+
     /*** LIST FILES ***/
 
     async listFiles(provider: CloudProvider): Promise<FilesListItem[]> {
@@ -102,6 +116,7 @@ export class ProviderService {
     }
 
 
+
     /*** DELETE ***/
 
     async deleteFile(fileName: string, provider: CloudProvider): Promise<void> {
@@ -115,7 +130,7 @@ export class ProviderService {
             await this.syncFromBackups(provider);
         }
         await provider.deleteFile(fileName);
-        await this.syncToBackups(fileName, "delete", provider);
+        await this.syncDeleteFromBackups(fileName, provider);
     }
 
     private async handleBackupDelete(provider: CloudProvider, fileName: string): Promise<void> {
@@ -131,20 +146,19 @@ export class ProviderService {
         throw new Error("No available providers for delete.");
     }
 
+    private async syncDeleteFromBackups(fileName: string, provider: CloudProvider): Promise<void> {
+        let backupProvider: CloudProvider | null = provider.backupProvider;
 
-    /*** SYNC ***/
-
-    private async syncToBackups(fileName: string, operation: "upload" | "delete", provider: CloudProvider, file?: FileData): Promise<void> {
-        let backupProvider: CloudProvider = provider.backupProvider;
         while (backupProvider) {
-            if (operation === "upload") {
-                await this.uploadFile(file, backupProvider).catch(err => console.error("Sync upload error:", err));
-            } else {
-                await this.deleteFile(fileName, backupProvider).catch(err => console.error("Sync delete error:", err));
-            }
+            await this.deleteFile(fileName, backupProvider)
+                .catch(err => console.error("Sync delete error:", err));
             backupProvider = backupProvider.backupProvider;
         }
     }
+
+
+
+    /*** SYNC ***/
 
     private async syncFromBackups(provider: CloudProvider): Promise<void> {
         let backupProvider: CloudProvider = provider.backupProvider;
@@ -163,7 +177,9 @@ export class ProviderService {
     }
 
 
+
     /*** GET FILE SIZE ***/
+
     async getFileSize(fileName: string, provider: CloudProvider): Promise<number> {
         const providerStatus: ProviderStatus = await this.getProviderStatus(provider);
 
