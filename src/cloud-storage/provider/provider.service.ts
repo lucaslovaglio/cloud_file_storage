@@ -25,7 +25,7 @@ export class ProviderService {
         if (providerStatus.status) {
             // Si el proveedor está disponible, subo el file y sync backups
             await provider.uploadFile(file);
-            await this.syncToBackups(file, "upload", provider);
+            await this.syncToBackups(file.name, "upload", provider, file); //TODO
         } else {
             await this.handleBackupUpload(provider, file);
         }
@@ -115,6 +115,7 @@ export class ProviderService {
             await this.syncFromBackups(provider);
         }
         await provider.deleteFile(fileName);
+        await this.syncToBackups(fileName, "delete", provider);
     }
 
     private async handleBackupDelete(provider: CloudProvider, fileName: string): Promise<void> {
@@ -133,13 +134,13 @@ export class ProviderService {
 
     /*** SYNC ***/
 
-    private async syncToBackups(file: FileData, operation: "upload" | "delete", provider: CloudProvider): Promise<void> {
+    private async syncToBackups(fileName: string, operation: "upload" | "delete", provider: CloudProvider, file?: FileData): Promise<void> {
         let backupProvider: CloudProvider = provider.backupProvider;
         while (backupProvider) {
             if (operation === "upload") {
                 await this.uploadFile(file, backupProvider).catch(err => console.error("Sync upload error:", err));
             } else {
-                await this.deleteFile(file.name, backupProvider).catch(err => console.error("Sync delete error:", err));
+                await this.deleteFile(fileName, backupProvider).catch(err => console.error("Sync delete error:", err));
             }
             backupProvider = backupProvider.backupProvider;
         }
@@ -222,7 +223,7 @@ export class ProviderService {
     private async syncFileFromBackup(file: FilesListItem, targetProvider: CloudProvider, sourceProvider: CloudProvider): Promise<void> {
         const fileUrl = await sourceProvider.getFileUrl(file.name);
         const fileContent = await this.downloadFileContent(fileUrl);
-        const fileContentAsString = Buffer.from(fileContent).toString('utf-8');
+        const fileContentAsString = Buffer.from(fileContent) //TODO ver esto
         await targetProvider.uploadFile({ name: file.name, content: fileContentAsString });
     }
 

@@ -58,6 +58,12 @@ export const StorageRepository = {
         });
     },
 
+    async deleteFile(fileId: number) {
+        return prisma.file.delete({
+            where: { id: fileId }
+        });
+    },
+
     async getFileByName(name: string) {
         return prisma.file.findUnique({
             where: {name: name},

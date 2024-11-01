@@ -8,6 +8,9 @@ export class UserController {
         const userId = req.body.userId;
         await userService.isUserAdmin(userId);
         const { email, password } = req.body;
+        if (typeof email !== 'string' || typeof password !== 'string') {
+            return res.status(400).json({ error: 'Email and password must be strings' });
+        }
         try {
             const user = await userService.createUser(email, password);
             res.json({ message: 'User created successfully', user });
@@ -20,6 +23,9 @@ export class UserController {
         const userId = req.body.userId;
         await userService.isUserAdmin(userId);
         const { id } = req.params;
+        if (isNaN(Number(id))) {
+            return res.status(400).json({ error: 'Invalid ID parameter' });
+        }
         try {
             const user = await userService.deleteUser(Number(id));
             res.json({ message: 'User deleted successfully', user });
@@ -32,6 +38,9 @@ export class UserController {
         const userId = req.body.userId;
         await userService.isUserAdmin(userId);
         const { id } = req.params;
+        if (isNaN(Number(id))) {
+            return res.status(400).json({ error: 'Invalid ID parameter' });
+        }
         try {
             const roles = await userService.getUserRoles(Number(id));
             res.json(roles);

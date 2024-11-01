@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import {StorageService} from "./storage.service";
 import { FileData } from "./storage.interface";
 import {CloudProviderFactory} from "./provider/provider.factory";
+import { uploadFile } from "./storage.middleware"; // Importa el middleware
+
 
 const awsProvider = CloudProviderFactory.createProvider("aws");
 const azureProvider = CloudProviderFactory.createProvider("azure");
@@ -13,8 +15,8 @@ export class StorageController {
     async uploadFile(req: Request, res: Response): Promise<Response> {
         try {
             const userId = req.body.userId;
-            const fileName = req.body.fileName;
-            const content = req.body.content;
+            const fileName = req.file.originalname;
+            const content = req.file.buffer;
             
             const file: FileData = {
                 name: fileName,
@@ -58,7 +60,7 @@ export class StorageController {
             await storageService.deleteFile(fileName, userId);
             return res.status(200).json({ message: "Archivo eliminado correctamente" });
         } catch (error) {
-            return res.status(500).json({ error: "Error al eliminar el archivo" });
+            return res.status(500).json({ error: `Error al eliminar el archivo: ${error}` });
         }
     }
 

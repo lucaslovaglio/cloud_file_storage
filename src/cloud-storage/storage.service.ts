@@ -25,10 +25,11 @@ export class StorageService {
     async uploadFile(file: FileData, userId: number): Promise<void> {
         await this.checkStorageLimit(userId, file);
 
+        const fileCreated = await StorageRepository.createFile(file, userId);
+
         const provider = this.cloudProvider;
         await providerService.uploadFile(file, provider);
 
-        const fileCreated = await StorageRepository.createFile(file, userId);
         const providerId = await providerService.getProviderId(provider.getProviderType())
         await StorageRepository.logFileUpload(providerId, fileCreated.id);
 
@@ -56,9 +57,13 @@ export class StorageService {
             throw new Error('No tiene permisos para eliminar este archivo');
         }
 
+        await StorageRepository.deleteFile(file.id);
+
         const provider = this.cloudProvider;
         await providerService.deleteFile(fileName, provider);
 
+        //TODO esto deberia estar en el provider
+        // para mejorar el provider puedo agarrar el file como hago aca y que todos reciban los mismos parametros, y ahi hago un mapa y queda joya
         const providerId = await providerService.getProviderId(provider.getProviderType());
         await StorageRepository.logFileDeletion(providerId, file.id);
     }
@@ -145,37 +150,7 @@ export class StorageService {
     }
 
     private async calculateFileSize(file: FileData): Promise<number> {
-        //TODO esto hay que ahcer que lo reciba en el constructor y que los tipos sean de una interfaz
-        const sizeCalculators = new Map<string, (file: FileData) => Promise<number>>([
-            ['text/plain', async (file) => {
-                return Buffer.byteLength(file.content as string, 'utf8');
-            }],
-            ['application/pdf', async (file) => {
-                return Buffer.isBuffer(file.content) ? file.content.length : 0;
-            }],
-        ]);
-
-        const fileType = this.getFileType(file)
-
-        const sizeCalculator = sizeCalculators.get(fileType);
-
-        if (sizeCalculator) {
-            return await sizeCalculator(file);
-        } else {
-            throw new Error(`No se encontró un calculador de tamaño para el tipo de archivo: ${fileType}`);
-        }
-    }
-
-    private getFileType(file: FileData): string {
-        //TODO tambien extraer tipos y mapa
-        const fileTypes = new Map<string, string>([
-            ['.txt', 'text/plain'],
-            ['.pdf', 'application/pdf'],
-        ]);
-
-        const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-
-        return fileTypes.get(extension) || 'text/plain';
+        return file.content.length
     }
 }
 

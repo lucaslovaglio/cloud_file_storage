@@ -42,7 +42,35 @@ export const ProviderRepository = {
             status: provider.status,
             previousStatus: provider.previousStatus
         }
-    }
+    },
+
+    async logFileUpload(providerId: number, fileId: number) {
+        const provider = await prisma.provider.findUnique({ where: { id: providerId } });
+        const file = await prisma.file.findUnique({ where: { id: fileId } });
+
+        if (!provider) {
+            throw new Error(`Provider with id ${providerId} does not exist`);
+        }
+
+        if (!file) {
+            throw new Error(`File with id ${fileId} does not exist`);
+        }
+
+        await prisma.fileStatusByProvider.create({
+            data: {
+                providerId,
+                fileId,
+                status: true
+            }
+        });
+    },
+
+    async logFileDeletion(providerId: number, fileId: number) {
+        await prisma.fileStatusByProvider.updateMany({
+            where: { providerId, fileId },
+            data: { status: false }
+        });
+    },
 }
 
 
