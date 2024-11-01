@@ -6,6 +6,18 @@ import {StorageRepository} from "../storage.repository";
 
 export class ProviderService {
 
+    /*** CRUD ***/
+
+    async createProvider(providerType: ProviderType): Promise<void> {
+        await ProviderRepository.createProvider(providerType)
+            .catch(() => {throw new Error(`Cannot create provider ${providerType}`)});
+    }
+
+    async deleteProvider(providerId: number): Promise<void> {
+        await ProviderRepository.deleteProvider(providerId)
+            .catch(() => {throw new Error(`Cannot delete provider with id ${providerId}`)});
+    }
+
     /*** UPLOAD ***/
 
     async uploadFile(file: FileData, provider: CloudProvider): Promise<void> {

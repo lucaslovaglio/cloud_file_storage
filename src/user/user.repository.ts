@@ -1,6 +1,5 @@
 import prisma from '../prisma/client';
 import { User } from '@prisma/client';
-import {RoleType} from "../role/role.interface";
 
 export const UserRepository = {
     async findUserByEmail(email: string): Promise<User | null> {
@@ -31,7 +30,7 @@ export const UserRepository = {
             }
         });
 
-        return userRoles.map((userRole) => (userRole.role.name as RoleType));
+        return userRoles.map((userRole) => (userRole.role.name));
     },
 
     async getUsers(): Promise<User[] | null> {

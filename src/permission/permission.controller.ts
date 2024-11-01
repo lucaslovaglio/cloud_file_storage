@@ -1,10 +1,14 @@
 import { Request, Response } from 'express';
 import {PermissionService} from "./permission.service";
+import {UserService} from "../user/user.service";
 
 const permissionService = new PermissionService();
+const userService = new UserService();
 
 export class PermissionController {
     async getPermissionById(req: Request, res: Response) {
+        const userId = req.body.userId;
+        await userService.isUserAdmin(userId);
         const { id } = req.params;
         try {
             const permission = await permissionService.getPermissionById(Number(id));
@@ -15,6 +19,8 @@ export class PermissionController {
     }
 
     async createPermission(req: Request, res: Response) {
+        const userId = req.body.userId;
+        await userService.isUserAdmin(userId);
         const { name } = req.body;
         try {
             const permission = await permissionService.createPermission(name);
@@ -25,6 +31,8 @@ export class PermissionController {
     }
 
     async deletePermission(req: Request, res: Response) {
+        const userId = req.body.userId;
+        await userService.isUserAdmin(userId);
         const { id } = req.params;
         try {
             const permission = await permissionService.deletePermission(Number(id));
@@ -35,6 +43,8 @@ export class PermissionController {
     }
 
     async assignPermissionToRole(req: Request, res: Response) {
+        const userId = req.body.userId;
+        await userService.isUserAdmin(userId);
         const { permissionId, roleId } = req.body;
         try {
             await permissionService.assignPermissionToRole(permissionId, roleId);

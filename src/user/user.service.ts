@@ -14,11 +14,16 @@ export class UserService {
         return UserRepository.deleteUser(id);
     }
 
-    async getUserRoles(id: number): Promise<RoleType[]> {
+    async getUserRoles(id: number) {
         return UserRepository.getUserRoles(id);
     }
 
     async getUsers() {
         return UserRepository.getUsers();
+    }
+
+    async isUserAdmin(userId: number) {
+        const roles: RoleType[] = await this.getUserRoles(userId) as RoleType[];
+        return roles.includes('admin');
     }
 }

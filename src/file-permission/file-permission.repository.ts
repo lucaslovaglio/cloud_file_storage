@@ -22,7 +22,8 @@ export const FilePermissionRepository = {
     },
 
     async assignFilePermission(userId: number, fileId: number, filePermissionType: FilePermissionTypeEnum) {
-        const filePermissionTypeId = await this.getFilePermissionTypeIdByName(filePermissionType);
+        const filePermissionTypeId = await this.getFilePermissionTypeIdByName(filePermissionType)
+            .catch(() => {throw new Error("File permission type not found")});
         return prisma.filePermission.create({
             data: {
                 userId: userId,
@@ -42,7 +43,8 @@ export const FilePermissionRepository = {
     },
 
     async deleteFilePermission(userId: number, fileId: number, filePermissionType: FilePermissionTypeEnum) {
-        const filePermissionTypeId = await this.getFilePermissionTypeIdByName(filePermissionType);
+        const filePermissionTypeId = await this.getFilePermissionTypeIdByName(filePermissionType)
+            .catch(() => {throw new Error("File permission type not found")});
         return prisma.filePermission.deleteMany({
             where: {
                 userId: userId,

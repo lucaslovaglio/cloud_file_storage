@@ -1,10 +1,14 @@
 import { Request, Response } from 'express';
 import {RoleService} from "./role.service";
+import {UserService} from "../user/user.service";
 
 const roleService = new RoleService();
+const userService = new UserService();
 
 export class RoleController {
     async getRoleById(req: Request, res: Response) {
+        const userId = req.body.userId;
+        await userService.isUserAdmin(userId);
         const { id } = req.params;
         try {
             const role = await roleService.getRoleById(Number(id));
@@ -15,7 +19,9 @@ export class RoleController {
     }
 
     async createRole(req: Request, res: Response) {
-        const { name } = req.body; //TODO: validate name with RoleType
+        const userId = req.body.userId;
+        await userService.isUserAdmin(userId);
+        const { name } = req.body;
         try {
             const role = await roleService.createRole(name);
             res.json({ message: 'Role created successfully', role });
@@ -25,6 +31,8 @@ export class RoleController {
     }
 
     async deleteRole(req: Request, res: Response) {
+        const userId = req.body.userId;
+        await userService.isUserAdmin(userId);
         const { id } = req.params;
         try {
             const role = await roleService.deleteRole(Number(id));
@@ -35,7 +43,9 @@ export class RoleController {
     }
 
     async assignRoleToUser(req: Request, res: Response) {
-        const { userId, roleId } = req.body;
+        const userId = req.body.userId;
+        await userService.isUserAdmin(userId);
+        const { roleId } = req.body;
         try {
             await roleService.assignRoleToUser(userId, roleId);
             res.json({ message: 'Role assigned to user' });
@@ -45,6 +55,8 @@ export class RoleController {
     }
 
     async getRolePermissions(req: Request, res: Response) {
+        const userId = req.body.userId;
+        await userService.isUserAdmin(userId);
         const { id } = req.params;
         try {
             const permissions = await roleService.getRolePermissions(Number(id));

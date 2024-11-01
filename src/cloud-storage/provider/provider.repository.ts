@@ -3,6 +3,14 @@ import {ProviderStatus, ProviderType} from "./provider.interface";
 import {Provider} from "@prisma/client";
 
 export const ProviderRepository = {
+    async createProvider(name: ProviderType): Promise<Provider> {
+        return prisma.provider.create({ data: { name } });
+    },
+
+    async deleteProvider(id: number): Promise<void> {
+        await prisma.provider.delete({ where: { id } });
+    },
+
     async findProviderIdByType(providerType: ProviderType): Promise<number> {
         const provider = await prisma.provider.findUnique({
             where: { name: providerType },

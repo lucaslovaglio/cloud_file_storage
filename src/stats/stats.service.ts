@@ -1,7 +1,4 @@
-import {StatsRepository} from "./stats.repository";
 import {UserService} from "../user/user.service";
-import {RoleType} from "../role/role.interface";
-import {StorageService} from "../cloud-storage/storage.service";
 import {AzureStorageService} from "../cloud-storage/storage.factory";
 import {DaysRange, StatsList, StatsListItem} from "./stats.interface";
 import {User, File} from "@prisma/client";
@@ -37,11 +34,6 @@ export class StatsService {
             userName: user.email,
             storageUsed: storageUsed
         };
-    }
-
-    async isUserAdmin(userId: number) {
-        const roles: RoleType[] = await userService.getUserRoles(userId);
-        return roles.includes('admin');
     }
 
     private getTodayRange(): DaysRange {

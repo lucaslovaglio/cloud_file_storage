@@ -5,6 +5,8 @@ const userService = new UserService();
 
 export class UserController {
     async createUser(req: Request, res: Response) {
+        const userId = req.body.userId;
+        await userService.isUserAdmin(userId);
         const { email, password } = req.body;
         try {
             const user = await userService.createUser(email, password);
@@ -15,6 +17,8 @@ export class UserController {
     }
 
     async deleteUser(req: Request, res: Response) {
+        const userId = req.body.userId;
+        await userService.isUserAdmin(userId);
         const { id } = req.params;
         try {
             const user = await userService.deleteUser(Number(id));
@@ -25,6 +29,8 @@ export class UserController {
     }
 
     async getUserRoles(req: Request, res: Response) {
+        const userId = req.body.userId;
+        await userService.isUserAdmin(userId);
         const { id } = req.params;
         try {
             const roles = await userService.getUserRoles(Number(id));
@@ -35,6 +41,8 @@ export class UserController {
     }
 
     async getUsers(req: Request, res: Response) {
+        const userId = req.body.userId;
+        await userService.isUserAdmin(userId);
         try {
             const users = await userService.getUsers();
             res.json(users);
