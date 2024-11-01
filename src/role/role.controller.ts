@@ -14,7 +14,7 @@ export class RoleController {
             const role = await roleService.getRoleById(Number(id));
             res.json(role);
         } catch (error) {
-            res.status(400).json({ error: (error as Error).message });
+            res.status(500).json({ error: (error as Error).message });
         }
     }
 
@@ -26,7 +26,7 @@ export class RoleController {
             const role = await roleService.createRole(name);
             res.json({ message: 'Role created successfully', role });
         } catch (error) {
-            res.status(400).json({ error: (error as Error).message });
+            res.status(500).json({ error: (error as Error).message });
         }
     }
 
@@ -38,7 +38,7 @@ export class RoleController {
             const role = await roleService.deleteRole(Number(id));
             res.json({ message: 'Role deleted successfully', role });
         } catch (error) {
-            res.status(400).json({ error: (error as Error).message });
+            res.status(500).json({ error: (error as Error).message });
         }
     }
 
@@ -50,7 +50,7 @@ export class RoleController {
             await roleService.assignRoleToUser(userId, roleId);
             res.json({ message: 'Role assigned to user' });
         } catch (error) {
-            res.status(400).json({ error: (error as Error).message });
+            res.status(500).json({ error: (error as Error).message });
         }
     }
 
@@ -62,7 +62,7 @@ export class RoleController {
             const permissions = await roleService.getRolePermissions(Number(id));
             res.json(permissions);
         } catch (error) {
-            res.status(400).json({ error: (error as Error).message });
+            res.status(500).json({ error: (error as Error).message });
         }
     }
 }

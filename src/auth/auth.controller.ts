@@ -10,7 +10,7 @@ export class AuthController {
             const token = await authService.register(email, password);
             res.json({ token });
         } catch (error) {
-            res.status(400).json({ error: (error as Error).message });
+            res.status(500).json({ error: (error as Error).message });
         }
     }
 
@@ -20,7 +20,7 @@ export class AuthController {
             const token = await authService.login(email, password);
             res.json({ token });
         } catch (error) {
-            res.status(400).json({ error: (error as Error).message });
+            res.status(500).json({ error: (error as Error).message });
         }
     }
 }

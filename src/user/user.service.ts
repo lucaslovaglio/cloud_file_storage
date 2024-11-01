@@ -7,19 +7,31 @@ export class UserService {
     }
 
     async createUser(email: string, password: string) {
-        return UserRepository.createUser(email, password);
+        return UserRepository.createUser(email, password)
+            .catch(() => {
+                throw new Error('User already exists');
+            });
     }
 
     async deleteUser(id: number) {
-        return UserRepository.deleteUser(id);
+        return UserRepository.deleteUser(id)
+            .catch(() => {
+                throw new Error('User not found');
+            });
     }
 
     async getUserRoles(id: number) {
-        return UserRepository.getUserRoles(id);
+        return UserRepository.getUserRoles(id)
+            .catch(() => {
+                throw new Error('User not found');
+            })
     }
 
     async getUsers() {
-        return UserRepository.getUsers();
+        return UserRepository.getUsers()
+            .catch(() => {
+                throw new Error('Cannot get users');
+            });
     }
 
     async isUserAdmin(userId: number) {

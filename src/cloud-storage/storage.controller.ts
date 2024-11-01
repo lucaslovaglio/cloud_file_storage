@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import {StorageService} from "./storage.service";
 import { FileData } from "./storage.interface";
 import {CloudProviderFactory} from "./provider/provider.factory";
-import { uploadFile } from "./storage.middleware"; // Importa el middleware
 
 
 const awsProvider = CloudProviderFactory.createProvider("aws");

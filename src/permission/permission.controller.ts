@@ -14,7 +14,7 @@ export class PermissionController {
             const permission = await permissionService.getPermissionById(Number(id));
             res.json(permission);
         } catch (error) {
-            res.status(400).json({ error: (error as Error).message });
+            res.status(500).json({ error: (error as Error).message });
         }
     }
 
@@ -26,7 +26,7 @@ export class PermissionController {
             const permission = await permissionService.createPermission(name);
             res.json({ message: 'Permission created successfully', permission });
         } catch (error) {
-            res.status(400).json({ error: (error as Error).message });
+            res.status(500).json({ error: (error as Error).message });
         }
     }
 
@@ -38,7 +38,7 @@ export class PermissionController {
             const permission = await permissionService.deletePermission(Number(id));
             res.json({ message: 'Permission deleted successfully', permission });
         } catch (error) {
-            res.status(400).json({ error: (error as Error).message });
+            res.status(500).json({ error: (error as Error).message });
         }
     }
 
@@ -50,7 +50,7 @@ export class PermissionController {
             await permissionService.assignPermissionToRole(permissionId, roleId);
             res.json({ message: 'Permission assigned to role' });
         } catch (error) {
-            res.status(400).json({ error: (error as Error).message });
+            res.status(500).json({ error: (error as Error).message });
         }
     }
 }
