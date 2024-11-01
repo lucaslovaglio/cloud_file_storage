@@ -80,6 +80,14 @@ export const StorageRepository = {
                 }
             }
         });
+    },
+
+    async getAllUserFiles(userId: number): Promise<File[]> {
+        return prisma.file.findMany({
+            where: {
+                createdById: userId
+            }
+        });
     }
 }
 

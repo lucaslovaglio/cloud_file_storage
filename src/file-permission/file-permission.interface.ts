@@ -1,0 +1,1 @@
+export type FilePermissionTypeEnum = "read" | "write" | "delete" | "share";

@@ -2,10 +2,12 @@ import {CloudProvider} from "./provider/provider.interface";
 import {FileData, FilesListItem} from "./storage.interface";
 import {StorageRepository} from "./storage.repository";
 import {ProviderService} from "./provider/provider.service";
+import {FilePermissionService} from "../file-permission/file-permission.service";
 import {DaysRange} from "../stats/stats.interface";
 import {File} from "@prisma/client";
 
 const providerService = new ProviderService();
+const filePermissionService = new FilePermissionService();
 
 const ONE_GB = 1000000000;
 
@@ -14,6 +16,11 @@ export class StorageService {
         private cloudProvider: CloudProvider,
         private storageLimit: number = ONE_GB * 5
     ) {}
+
+
+    /////////////////////////
+    // BASIC FILE OPERATIONS
+    /////////////////////////
 
     async uploadFile(file: FileData, userId: number): Promise<void> {
         await this.checkStorageLimit(userId, file);
@@ -24,27 +31,65 @@ export class StorageService {
         const fileCreated = await StorageRepository.createFile(file, userId);
         const providerId = await providerService.getProviderId(provider.getProviderType())
         await StorageRepository.logFileUpload(providerId, fileCreated.id);
+
+        await filePermissionService.assignOwnerPermissions(userId, fileCreated.id);
     }
 
     async getFileUrl(fileName: string, userId: number): Promise<string> {
-        // TODO chequear si el usuario tiene permisos para leer este archivo
+        const file = await StorageRepository.getFileByName(fileName);
+        if (!await filePermissionService.canReadFile(userId, file.id)) {
+            throw new Error('No tiene permisos para leer este archivo');
+        }
         return await providerService.getFileUrl(fileName, this.cloudProvider);
     }
 
     async listFile(userId: number): Promise<FilesListItem[]> {
-        // TODO aca tengo que filtrar solo los que le corresponden al usuario
-        return await providerService.listFiles(this.cloudProvider);
+        const files = await providerService.listFiles(this.cloudProvider);
+        const userFiles = await StorageRepository.getAllUserFiles(userId);
+        const userFileNames = userFiles.map(file => file.name);
+        return files.filter(file => userFileNames.includes(file.name));
     }
 
-    async deleteFile(fileName: string): Promise<void> {
+    async deleteFile(fileName: string, userId): Promise<void> {
+        const file = await StorageRepository.getFileByName(fileName);
+        if (!await filePermissionService.canDeleteFile(userId, file.id)) {
+            throw new Error('No tiene permisos para eliminar este archivo');
+        }
+
         const provider = this.cloudProvider;
         await providerService.deleteFile(fileName, provider);
 
-        const file = await StorageRepository.getFileByName(fileName);
         const providerId = await providerService.getProviderId(provider.getProviderType());
         await StorageRepository.logFileDeletion(providerId, file.id);
     }
 
+
+    /////////////////////////
+    // FILE SHARING
+    /////////////////////////
+
+    async shareFileWithUser(fileName: string, userId: number, targetUserId: number): Promise<void> {
+        const file = await StorageRepository.getFileByName(fileName);
+        if (!await filePermissionService.canShareFile(userId, file.id)) {
+            throw new Error('No tiene permisos para compartir este archivo');
+        }
+
+        await filePermissionService.assignGuestPermissions(targetUserId, file.id);
+    }
+
+    async cancelFileSharing(fileName: string, userId: number, targetUserId: number): Promise<void> {
+        const file = await StorageRepository.getFileByName(fileName);
+        if (!await filePermissionService.canShareFile(userId, file.id)) {
+            throw new Error('No tiene permisos para compartir este archivo');
+        }
+
+        await filePermissionService.disableGuestPermissions(targetUserId, file.id);
+    }
+
+
+    /////////////////////////
+    // UTILS
+    /////////////////////////
 
     async getFilesFromUserByDate(userId: number, startDate: Date, endDate: Date) {
         return StorageRepository.getFilesFromUserByDate(userId, startDate, endDate);
@@ -132,8 +177,5 @@ export class StorageService {
 
         return fileTypes.get(extension) || 'text/plain';
     }
-
-
-
 }
 

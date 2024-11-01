@@ -12,46 +12,75 @@ const storageService = new StorageService(azureProvider);
 export class StorageController {
     async uploadFile(req: Request, res: Response): Promise<Response> {
         try {
-            //TODO: archivos hardcodeados
+            const userId = req.body.userId;
+            const fileName = req.body.fileName;
+            const content = req.body.content;
+            
             const file: FileData = {
-                name: 'blobName10.txt',
-                content: 'fileBuffer'
-            }
-            await storageService.uploadFile(file);
-            return res.status(201).json({ message: "Blob subido correctamente" });
+                name: fileName,
+                content: content
+            };
+            
+            await storageService.uploadFile(file, userId);
+            return res.status(201).json({ message: "Archivo subido correctamente" });
         } catch (error) {
-            return res.status(500).json({ error: `Error al subir el blob, ${error.message}` });
+            return res.status(500).json({ error: `Error al subir el archivo: ${error.message}` });
         }
     }
 
 
     async downloadFile(req: Request, res: Response): Promise<Response> {
         try {
-            // const { blobName } = req.params;
-            //TODO: archivo hardcodeado
-            const content = await storageService.getFileUrl('blobName10.txt');
-            return res.status(200).json({ content });
+            const userId = req.body.userId;
+            const { fileName } = req.params;
+            
+            const fileUrl = await storageService.getFileUrl(fileName, userId);
+            return res.status(200).json({ fileUrl });
         } catch (error) {
-            return res.status(500).json({ error: `Error al descargar el blob, ${error.message}` });
+            return res.status(500).json({ error: `Error al solicitar el link de descarga: ${error.message}` });
         }
     }
 
     async listFile(req: Request, res: Response): Promise<Response> {
         try {
-            const blobNames = await storageService.listFile();
-            return res.status(200).json({ blobs: blobNames });
+            const userId = req.body.userId;
+            const fileNames = await storageService.listFile(userId);
+            return res.status(200).json({ files: fileNames });
         } catch (error) {
-            return res.status(500).json({ error: `Error al listar blobs, ${error.message}` });
+            return res.status(500).json({ error: `Error al listar los archivos: ${error.message}` });
         }
     }
 
     async deleteFile(req: Request, res: Response): Promise<Response> {
         try {
-            const { blobName } = req.params;
-            await storageService.deleteFile(blobName);
-            return res.status(200).json({ message: "Blob eliminado correctamente" });
+            const userId = req.body.userId;
+            const { fileName } = req.params;
+            await storageService.deleteFile(fileName, userId);
+            return res.status(200).json({ message: "Archivo eliminado correctamente" });
         } catch (error) {
-            return res.status(500).json({ error: "Error al eliminar el blob" });
+            return res.status(500).json({ error: "Error al eliminar el archivo" });
+        }
+    }
+
+    async shareFile(req: Request, res: Response): Promise<Response> {
+        try {
+            const userId = req.body.userId;
+            const { fileName, targetUserId } = req.body;
+            await storageService.shareFileWithUser(fileName, userId, targetUserId);
+            return res.status(200).json({ message: "Archivo compartido correctamente" });
+        } catch (error) {
+            return res.status(500).json({ error: "Error al compartir el blob" });
+        }
+    }
+
+    async unshareFile(req: Request, res: Response): Promise<Response> {
+        try {
+            const userId = req.body.userId;
+            const { fileName, targetUserId } = req.body;
+            await storageService.cancelFileSharing(fileName, userId, targetUserId);
+            return res.status(200).json({message: "Se ha dejado de compartir el archivo exitosamente"});
+        } catch (error) {
+            return res.status(500).json({error: "Error al dejar de compartir el archivo"});
         }
     }
 }
