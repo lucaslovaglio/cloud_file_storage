@@ -37,11 +37,15 @@ export class StatsService {
     }
 
     private getTodayRange(): DaysRange {
-        const today: Date = new Date();
-        today.setHours(0, 0, 0, 0);
+        const start: Date = new Date();
+        start.setHours(0, 0, 0, 0); // Inicio del día a las 00:00
+
+        const end: Date = new Date();
+        // end.setHours(23, 59, 59, 999); // Final del día a las 23:59:59
+
         return {
-            start: today,
-            end: today
-        }
+            start: start,
+            end: end
+        };
     }
 }

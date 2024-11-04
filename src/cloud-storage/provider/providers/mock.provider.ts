@@ -8,13 +8,11 @@ export class MockProvider implements CloudProvider {
     isTestStorageLimit: boolean = false;
 
     async uploadFile(file: FileData): Promise<void> {
-        if (!this.isAvailable) throw new Error("Service unavailable");
         this.files.push(file);
         console.log(`Mock upload: ${file.name}`);
     }
 
     async deleteFile(fileName: string): Promise<void> {
-        if (!this.isAvailable) throw new Error("Service unavailable");
         this.files = this.files.filter(file => file.name !== fileName);
         console.log(`Mock delete: ${fileName}`);
     }
@@ -26,7 +24,6 @@ export class MockProvider implements CloudProvider {
     }
 
     async listFiles(): Promise<FilesListItem[]> {
-        if (!this.isAvailable) throw new Error("Service unavailable");
         return this.files.map(file => ({
             name: file.name,
             size: file.content.length,

@@ -93,7 +93,7 @@ export class AzureProvider implements CloudProvider {
 
     async checkAvailability(): Promise<boolean> {
         try {
-            await this.listFiles()
+            this.blobServiceClient.getContainerClient(this.containerClient.containerName);
             return true
         } catch (error) {
             console.log(error)

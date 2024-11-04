@@ -77,6 +77,7 @@ class S3Provider implements CloudProvider{
     async checkAvailability(): Promise<boolean> {
         try {
             await this.listFiles()
+            await this.s3.getBucketLocation({Bucket: this.bucketName}).promise()
             return true
         } catch (error) {
             console.log(error)

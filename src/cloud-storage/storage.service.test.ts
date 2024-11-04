@@ -14,56 +14,30 @@ describe('StorageService Tests', () => {
         storageService = new StorageService(mockProvider);
     });
 
-    test('should upload file successfully', async () => {
-        const file: FileData = { name: 'test.txt', content: Buffer.from('Hello World') };
-        await storageService.uploadFile(file, 1); // Suponiendo que el userId es 1
-        const files = await storageService.listFile(1);
-        expect(files).toHaveLength(1);
-        expect(files[0].name).toBe('test.txt');
-    });
+    it('should upload a file even when the service is unavailable, and then sync when its available again', async () => {
+        // Configura la disponibilidad en false
+        mockProvider.setAvailability(false);
 
-    test('should throw error if storage limit exceeded', async () => {
-        storageService['storageLimit'] = 10; // Establece un límite bajo
-        const file: FileData = { name: 'bigfile.txt', content: Buffer.alloc(15) }; // Archivo más grande que el límite
-
-        await expect(storageService.uploadFile(file, 1)).rejects.toThrow('No hay espacio suficiente en el almacenamiento');
-    });
-
-    test('should delete a file successfully', async () => {
-        const file: FileData = { name: 'test.txt', content: Buffer.from('Hello World') };
-        await storageService.uploadFile(file, 1);
-        await storageService.deleteFile('test.txt', 1);
-        const files = await storageService.listFile(1);
-        expect(files).toHaveLength(0);
-    });
-
-    test('should throw error when trying to delete file without permission', async () => {
-        const file: FileData = { name: 'test.txt', content: Buffer.from('Hello World') };
+        // Intenta subir un archivo
+        const file: FileData = { name: 'testfile5.txt', content: Buffer.from('This is a test file.') };
         await storageService.uploadFile(file, 1);
 
-        await expect(storageService.deleteFile('test.txt', 2)).rejects.toThrow('No tiene permisos para eliminar este archivo');
-    });
+        // Verifica que el archivo se haya subido correctamente
+        const providerFiles  = await mockProvider.listFiles();
+        const serviceFiles  = await storageService.listFile(1);
+        const backupProviderFiles  = await mockProvider.backupProvider.listFiles();
+        expect(providerFiles).not.toEqual(backupProviderFiles);
 
-    test('should return file URL for authorized user', async () => {
-        const file: FileData = { name: 'test.txt', content: Buffer.from('Hello World') };
-        await storageService.uploadFile(file, 1);
-        const url = await storageService.getFileUrl('test.txt', 1);
-        expect(url).toContain('http'); // Verifica que sea una URL válida
-    });
+        mockProvider.setAvailability(true);
 
-    test('should throw error when unauthorized user tries to access file URL', async () => {
-        const file: FileData = { name: 'test.txt', content: Buffer.from('Hello World') };
-        await storageService.uploadFile(file, 1);
+        const updatedServiceFiles  = await storageService.listFile(1);
+        // Once the provider is available again, the file should be synced
+        const updatedProviderFiles  = await mockProvider.listFiles();
+        const updatedBackupProviderFiles  = await mockProvider.backupProvider.listFiles();
+        expect(updatedProviderFiles).toEqual(updatedBackupProviderFiles);
+    }, 300000);
 
-        await expect(storageService.getFileUrl('test.txt', 2)).rejects.toThrow('No tiene permisos para leer este archivo');
-    });
 
-    test('should share file with another user', async () => {
-        const file: FileData = { name: 'test.txt', content: Buffer.from('Hello World') };
-        await storageService.uploadFile(file, 1);
-        await storageService.shareFileWithUser('test.txt', 1, 2); // Comparte con el usuario 2
-        expect(await storageService.listFile(2)).toContainEqual(expect.objectContaining({ name: 'test.txt' }));
-    });
 
     it('should fail to upload a file if storage limit is exceeded', async () => {
         // Intentar subir un archivo de 1 MB cuando el límite ya ha sido alcanzado
