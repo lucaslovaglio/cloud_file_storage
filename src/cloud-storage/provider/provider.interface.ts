@@ -12,7 +12,7 @@ export interface CloudProvider {
     checkAvailability(): Promise<boolean>;
 }
 
-export type ProviderType = "azure" | "aws" | "google";
+export type ProviderType = "azure" | "aws" | "mock";
 
 export interface ProviderStatus {
     id: number

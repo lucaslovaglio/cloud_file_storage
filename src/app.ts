@@ -8,9 +8,22 @@ import statsRoutes from "./stats/stats.routes";
 
 
 const app = express();
+const { specs, swaggerUi } = require('../swagger');
+
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 app.use(express.json());
 
+/**
+* @swagger
+* /sample:
+*   get:
+*     summary: Returns a sample message
+*     responses:
+*       200:
+*         description: A successful response
+*/
 app.get('/', (req: Request, res: Response) => {
     res.send('Hello, Cloud File Storage!');
 });
