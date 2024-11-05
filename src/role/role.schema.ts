@@ -6,4 +6,5 @@ export const createRoleSchema = z.object({
 
 export const assignRoleToUserSchema = z.object({
     roleId: z.number(),
+    targetUserId: z.number(),
 });

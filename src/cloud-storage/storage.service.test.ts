@@ -15,14 +15,11 @@ describe('StorageService Tests', () => {
     });
 
     it('should upload a file even when the service is unavailable, and then sync when its available again', async () => {
-        // Configura la disponibilidad en false
         mockProvider.setAvailability(false);
 
-        // Intenta subir un archivo
         const file: FileData = { name: 'testfile5.txt', content: Buffer.from('This is a test file.') };
         await storageService.uploadFile(file, 1);
 
-        // Verifica que el archivo se haya subido correctamente
         const providerFiles  = await mockProvider.listFiles();
         const serviceFiles  = await storageService.listFile(1);
         const backupProviderFiles  = await mockProvider.backupProvider.listFiles();
@@ -40,7 +37,6 @@ describe('StorageService Tests', () => {
 
 
     it('should fail to upload a file if storage limit is exceeded', async () => {
-        // Intentar subir un archivo de 1 MB cuando el límite ya ha sido alcanzado
         mockProvider.testStorageLimit();
         await expect(storageService.uploadFile({ name: 'bigfile.txt', content: Buffer.alloc(1024 * 1024) }, 1))
             .rejects

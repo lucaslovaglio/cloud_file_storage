@@ -105,16 +105,6 @@ export class AzureProvider implements CloudProvider {
         await this.containerClient.createIfNotExists();
     }
 
-    private async streamToString(readableStream: NodeJS.ReadableStream): Promise<string> {
-        return new Promise((resolve, reject) => {
-            const chunks: Uint8Array[] = [];
-            readableStream.on("data", (data) => chunks.push(data instanceof Buffer ? data : Buffer.from(data)));
-            readableStream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
-            readableStream.on("error", reject);
-        });
-    }
-
-
     getProviderType(): ProviderType {
         return "azure"
     }

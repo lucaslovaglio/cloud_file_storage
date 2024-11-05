@@ -22,7 +22,7 @@ class S3Provider implements CloudProvider{
         };
 
         await this.s3.upload(params).promise();
-        console.log(`Archivo ${file.name} subido al bucket ${this.bucketName}.`);
+        console.log(`File ${file.name} uploaded to bucket ${this.bucketName}.`);
     }
 
     async deleteFile(fileName: string): Promise<void> {
@@ -32,7 +32,7 @@ class S3Provider implements CloudProvider{
         };
 
         await this.s3.deleteObject(params).promise();
-        console.log(`Archivo ${fileName} eliminado del bucket ${this.bucketName}.`);
+        console.log(`File ${fileName} deleted from bucket ${this.bucketName}.`);
     }
 
     async getFileUrl(fileName: string): Promise<string> {
@@ -65,7 +65,7 @@ class S3Provider implements CloudProvider{
             const data = await this.s3.headObject(params).promise();
             return data.ContentLength || 0; // Tamaño en bytes
         } catch (error) {
-            console.error(`Error al obtener el tamaño del archivo ${fileName}:`, error);
+            console.error(`Error getting the file size ${fileName}:`, error);
             return null;
         }
     }

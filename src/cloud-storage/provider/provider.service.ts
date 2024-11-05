@@ -27,7 +27,7 @@ export class ProviderService {
         if (providerStatus.status) {
             // Si el proveedor está disponible, subo el file y sync backups
             await provider.uploadFile(file);
-            await this.syncUploadToBackups(file, provider);
+            this.syncUploadToBackups(file, provider);
         } else {
             await this.handleBackupUpload(provider, file);
         }
@@ -51,7 +51,11 @@ export class ProviderService {
 
         while (backupProvider) {
             await this.uploadFile(file, backupProvider)
-                .catch(err => console.error("Sync upload error:", err));
+                .catch(async err => {
+                    console.error("Sync upload error:", err)
+                    const providerId = await this.getProviderId(provider.getProviderType());
+                    ProviderRepository.updateProviderStatus(providerId, false)
+                });
             backupProvider = backupProvider.backupProvider;
         }
     }

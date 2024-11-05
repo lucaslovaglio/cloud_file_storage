@@ -23,9 +23,9 @@ export class StorageController {
             };
             
             await storageService.uploadFile(file, userId);
-            return res.status(201).json({ message: "Archivo subido correctamente" });
+            return res.status(201).json({ message: "File uploaded successfully" });
         } catch (error) {
-            return res.status(500).json({ error: `Error al subir el archivo: ${error.message}` });
+                return res.status(500).json({ error: `Error uploading the file: ${error.message}` });
         }
     }
 
@@ -38,7 +38,7 @@ export class StorageController {
             const fileUrl = await storageService.getFileUrl(fileName, userId);
             return res.status(200).json({ fileUrl });
         } catch (error) {
-            return res.status(500).json({ error: `Error al solicitar el link de descarga: ${error.message}` });
+            return res.status(500).json({error: `Error requesting the download link: ${error.message}`});
         }
     }
 
@@ -48,7 +48,7 @@ export class StorageController {
             const fileNames = await storageService.listFile(userId);
             return res.status(200).json({ files: fileNames });
         } catch (error) {
-            return res.status(500).json({ error: `Error al listar los archivos: ${error.message}` });
+            return res.status(500).json({error: `Error listing files: ${error.message}`});
         }
     }
 
@@ -57,9 +57,9 @@ export class StorageController {
             const userId = req.body.userId;
             const { fileName } = req.params;
             await storageService.deleteFile(fileName, userId);
-            return res.status(200).json({ message: "Archivo eliminado correctamente" });
+            return res.status(200).json({ message: "File deleted successfully" });
         } catch (error) {
-            return res.status(500).json({ error: `Error al eliminar el archivo: ${error}` });
+                return res.status(500).json({ error: `Error deleting the file: ${error.message}` });
         }
     }
 
@@ -68,9 +68,9 @@ export class StorageController {
             const userId = req.body.userId;
             const { fileName, targetUserId } = req.body;
             await storageService.shareFileWithUser(fileName, userId, targetUserId);
-            return res.status(200).json({ message: "Archivo compartido correctamente" });
+            return res.status(200).json({ message: "File shared successfully" });
         } catch (error) {
-            return res.status(500).json({ error: "Error al compartir el blob" });
+            return res.status(500).json({ error: "Error sharing file" });
         }
     }
 
@@ -79,9 +79,9 @@ export class StorageController {
             const userId = req.body.userId;
             const { fileName, targetUserId } = req.body;
             await storageService.cancelFileSharing(fileName, userId, targetUserId);
-            return res.status(200).json({message: "Se ha dejado de compartir el archivo exitosamente"});
+            return res.status(200).json({ message: "File unshared successfully" });
         } catch (error) {
-            return res.status(500).json({error: "Error al dejar de compartir el archivo"});
+                return res.status(500).json({ error: "Error unsharing file" });
         }
     }
 }

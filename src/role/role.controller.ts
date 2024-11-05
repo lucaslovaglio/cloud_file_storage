@@ -45,9 +45,9 @@ export class RoleController {
     async assignRoleToUser(req: Request, res: Response) {
         const userId = req.body.userId;
         await userService.isUserAdmin(userId);
-        const { roleId } = req.body;
+        const { roleId, targetUserId } = req.body;
         try {
-            await roleService.assignRoleToUser(userId, roleId);
+            await roleService.assignRoleToUser(targetUserId, roleId);
             res.json({ message: 'Role assigned to user' });
         } catch (error) {
             res.status(500).json({ error: (error as Error).message });

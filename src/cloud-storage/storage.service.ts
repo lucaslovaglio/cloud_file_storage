@@ -39,7 +39,7 @@ export class StorageService {
     async getFileUrl(fileName: string, userId: number): Promise<string> {
         const file = await StorageRepository.getFileByName(fileName);
         if (!await filePermissionService.canReadFile(userId, file.id)) {
-            throw new Error('No tiene permisos para leer este archivo');
+            throw new Error('You do not have permission to read this file');
         }
         return await providerService.getFileUrl(fileName, this.cloudProvider);
     }
@@ -54,7 +54,7 @@ export class StorageService {
     async deleteFile(fileName: string, userId): Promise<void> {
         const file = await StorageRepository.getFileByName(fileName);
         if (!await filePermissionService.canDeleteFile(userId, file.id)) {
-            throw new Error('No tiene permisos para eliminar este archivo');
+            throw new Error('You do not have permission to delete this file');
         }
 
         await StorageRepository.deleteFile(file.id);
@@ -76,7 +76,7 @@ export class StorageService {
     async shareFileWithUser(fileName: string, userId: number, targetUserId: number): Promise<void> {
         const file = await StorageRepository.getFileByName(fileName);
         if (!await filePermissionService.canShareFile(userId, file.id)) {
-            throw new Error('No tiene permisos para compartir este archivo');
+            throw new Error('You do not have permission to share this file');
         }
 
         await filePermissionService.assignGuestPermissions(targetUserId, file.id);
@@ -85,7 +85,7 @@ export class StorageService {
     async cancelFileSharing(fileName: string, userId: number, targetUserId: number): Promise<void> {
         const file = await StorageRepository.getFileByName(fileName);
         if (!await filePermissionService.canShareFile(userId, file.id)) {
-            throw new Error('No tiene permisos para compartir este archivo');
+            throw new Error('You do not have permission to unshare this file');
         }
 
         await filePermissionService.disableGuestPermissions(targetUserId, file.id);
@@ -145,7 +145,7 @@ export class StorageService {
         const storageUsed = await this.calculateUserStorage(userId);
 
         if (!this.hasStorageAvailable(storageUsed + fileSize)) {
-            throw new Error('No hay espacio suficiente en el almacenamiento');
+            throw new Error('Not enough storage space available');
         }
     }
 
